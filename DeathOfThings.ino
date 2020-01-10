@@ -5,11 +5,14 @@
 
 // -- Initial name of the Thing. Used e.g. as SSID of the own Access Point.
 String thingName = "DoT_"+String(ESP.getChipId(),HEX);
+int buttonPin   = D5;
+int buttonValue = 0;
+int lastRead    = 0;
 
 // -- Initial password to connect to the Thing, when it creates an own Access Point.
 const char wifiInitialApPassword[] = "";
 
-#define STRING_LEN 128
+#define STRING_LEN 256
 
 // -- Configuration specific key. The value should be modified if config structure was changed.
 #define CONFIG_VERSION "mqt2"
@@ -99,6 +102,9 @@ void setup()
   u8x8log.setRedrawMode(0);    // 0: Update screen with newline, 1: Update screen for every char  
 
   u8x8log.println(thingName);
+
+  pinMode(buttonPin,INPUT_PULLUP); 
+  lastRead = millis();
 }
 
 void loop() 
@@ -135,6 +141,15 @@ void loop()
     Serial.print("Sending on MQTT channel '/test/status' :");
     Serial.println(pinState == LOW ? "ON" : "OFF");
     mqttClient.publish("/test/status", pinState == LOW ? "ON" : "OFF");
+  }
+
+  int digRead = digitalRead(buttonPin);
+  if((200 < now - lastRead) && (digRead != buttonValue)){
+    Serial.println(String("button!") + String(buttonValue));
+    buttonValue = digRead;
+    lastRead = now;
+    mqttClient.publish(String(mqttUserNameValue) + "/feeds/button",String(buttonValue));
+    
   }
 }
 
@@ -201,24 +216,10 @@ boolean connectMqtt() {
   }
   Serial.println("Connected!");
   
-  mqttClient.subscribe("muimota/feeds/button");
-  mqttClient.subscribe("muimota/feeds/text_screen");
+  mqttClient.subscribe(String(mqttUserNameValue) + "/feeds/button");
+  mqttClient.subscribe(String(mqttUserNameValue) + "/feeds/text_screen");
   return true;
 }
-
-/*
-// -- This is an alternative MQTT connection method.
-boolean connectMqtt() {
-  Serial.println("Connecting to MQTT server...");
-  while (!connectMqttOptions()) {
-    iotWebConf.delay(1000);
-  }
-  Serial.println("Connected!");
-
-  mqttClient.subscribe("/test/action");
-  return true;
-}
-*/
 
 boolean connectMqttOptions()
 {

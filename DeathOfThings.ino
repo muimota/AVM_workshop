@@ -216,7 +216,7 @@ boolean connectMqtt() {
   }
   Serial.println("Connected!");
   
-  mqttClient.subscribe(String(mqttUserNameValue) + "/feeds/button");
+  //mqttClient.subscribe(String(mqttUserNameValue) + "/feeds/button");
   mqttClient.subscribe(String(mqttUserNameValue) + "/feeds/text_screen");
   return true;
 }
